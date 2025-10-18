@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Bias Spotter Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .case-text span {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border-radius: 0.25rem;
+            padding: 2px 1px;
+        }
+        .case-text span:hover {
+            background-color: rgba(250, 204, 21, 0.3);
+        }
+        .highlighted {
+            background-color: rgba(250, 204, 21, 0.6);
+        }
+        .feedback-modal {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <main id="appContainer" class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8 space-y-6">
+
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Bias Spotter Challenge</h1>
+            <p class="mt-2 text-slate-600">Train yourself to identify unfair bias in AI-generated text.</p>
+        </div>
+        
+        <div class="h-px bg-slate-200"></div>
+
+        <!-- Introduction Step -->
+        <div id="introStep" class="space-y-4">
+            <h2 class="text-xl font-semibold text-slate-800">Welcome to the Bias Spotter Challenge!</h2>
+            <p class="text-slate-700">Now that you've seen the video on AI limitations, this activity will help you practice and reinforce what you've learned. The goal is to get better at spotting the subtle (and not-so-subtle) ways that AI can reflect unfair social biases.</p>
+            <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <h3 class="font-semibold text-slate-900">How it Works:</h3>
+                <ul class="list-disc list-inside mt-2 text-slate-700 space-y-1">
+                    <li>You will be presented with three AI-generated case studies.</li>
+                    <li>Read the text and click on any words or phrases that seem biased.</li>
+                    <li>Once you highlight something, select the reason why you think it's biased.</li>
+                    <li>Review the instant feedback to see the explanation and sharpen your skills.</li>
+                </ul>
+            </div>
+            <button id="introContinueBtn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105">Let's Get Started</button>
+        </div>
+
+        <!-- Initial Reflection Step -->
+        <div id="reflectionStep" class="hidden space-y-4">
+            <h2 class="text-xl font-semibold text-slate-800">First, A Quick Reflection...</h2>
+            <label for="reflection-input" class="block text-slate-700">Think of a time you've seen a stereotype in a movie or book. What did it look like? (This is just for you)</label>
+            <textarea id="reflection-input" rows="3" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></textarea>
+            <button id="startBtn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105">Start the Challenge</button>
+        </div>
+
+        <!-- Game Step -->
+        <div id="gameStep" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-slate-800">Case Study <span id="caseNumber">1</span> of 3</h2>
+                <div id="progress" class="flex space-x-2">
+                    <div class="w-8 h-2 bg-slate-200 rounded-full"></div>
+                    <div class="w-8 h-2 bg-slate-200 rounded-full"></div>
+                    <div class="w-8 h-2 bg-slate-200 rounded-full"></div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-100 p-4 rounded-lg border border-slate-200">
+                <p class="font-semibold text-slate-900">AI Prompt:</p>
+                <p id="promptText" class="text-slate-700 italic"></p>
+            </div>
+
+            <div class="space-y-3">
+                <p class="font-semibold text-slate-900">AI-Generated Response:</p>
+                <p class="text-slate-700 leading-relaxed">Select the words or phrases that show potential bias.</p>
+                <div id="caseText" class="case-text p-4 border-2 border-dashed border-slate-300 rounded-lg text-lg"></div>
+            </div>
+
+            <div id="reasoningSection" class="hidden space-y-3">
+                 <p class="font-semibold text-slate-900">Why are the highlighted parts biased?</p>
+                 <div id="choices" class="space-y-2">
+                    <!-- Choices will be injected here -->
+                 </div>
+                 <button id="submitBtn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:scale-100" disabled>Check My Answer</button>
+            </div>
+        </div>
+
+        <!-- Final Reflection Step -->
+        <div id="finalStep" class="hidden space-y-4 text-center">
+            <h2 class="text-2xl font-bold text-slate-900">Challenge Complete!</h2>
+            <p id="finalScore" class="text-lg text-slate-600"></p>
+            <div class="h-px bg-slate-200"></div>
+            <h3 class="text-xl font-semibold text-slate-800">Final Reflection</h3>
+            <label for="final-reflection-input" class="block text-slate-700">Which of these was the most difficult to spot? Why do you think some biases are harder to see than others?</label>
+            <textarea id="final-reflection-input" rows="4" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-left"></textarea>
+            
+            <div class="h-px bg-slate-200 my-4"></div>
+
+            <!-- Next Steps Section -->
+            <div class="text-left space-y-3 pt-2">
+                 <h3 class="text-xl font-semibold text-slate-800 text-center">Next Steps & Resources</h3>
+                 <p class="text-slate-700 text-center">Continue to build your AI literacy. Here are some practical steps and high-value resources:</p>
+                 <ul class="list-disc list-inside space-y-2 text-slate-700 bg-slate-50 p-4 rounded-lg">
+                    <li><strong>Experiment with Prompts:</strong> Actively try to write prompts that avoid bias. See how changing a few words in a prompt can alter the AI's output.</li>
+                    <li><strong>Stay Curious:</strong> The world of AI is changing fast. Follow reputable sources to stay informed about new tools and ethical discussions.</li>
+                    <li><strong>Explore Further Learning:</strong>
+                        <ul class="list-['-_'] list-inside ml-4 mt-2 space-y-2">
+                            <li><a href="https://www.cloudskillsboost.google/course_templates/554" target="_blank" class="text-blue-600 hover:underline">Google - Introduction to Responsible AI:</a> A free course covering fairness, accountability, and transparency in AI.</li>
+                            <li><a href="https://promptingguide.ai/" target="_blank" class="text-blue-600 hover:underline">Prompt Engineering Guide:</a> A comprehensive guide with the latest techniques and research on prompting LLMs.</li>
+                             <li><a href="https://hai.stanford.edu/news/building-trustworthy-ai" target="_blank" class="text-blue-600 hover:underline">Stanford HAI - Building Trustworthy AI:</a> Explore articles and research from leaders in AI ethics and safety.</li>
+                        </ul>
+                    </li>
+                 </ul>
+            </div>
+
+            <button id="restartBtn" class="w-full bg-slate-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all duration-200 transform hover:scale-105">Play Again</button>
+        </div>
+        
+        <!-- Feedback Modal -->
+        <div id="feedbackModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+            <div class="feedback-modal bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-md w-full space-y-4 text-center">
+                <h2 id="feedbackTitle" class="text-2xl font-bold"></h2>
+                <p id="feedbackText" class="text-slate-600"></p>
+                <button id="nextBtn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105">Continue</button>
+            </div>
+        </div>
+
+        <footer class="text-center pt-6 mt-6 border-t border-slate-200">
+            <p class="text-sm text-slate-500">
+                Designed by <a href="https://www.linkedin.com/in/anmoal-singh-thethi/" target="_blank" class="font-semibold text-blue-600 hover:underline">Anmoal Thethi</a>
+            </p>
+        </footer>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM ELEMENTS ---
+            const introStep = document.getElementById('introStep');
+            const reflectionStep = document.getElementById('reflectionStep');
+            const gameStep = document.getElementById('gameStep');
+            const finalStep = document.getElementById('finalStep');
+
+            const introContinueBtn = document.getElementById('introContinueBtn');
+            const startBtn = document.getElementById('startBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const restartBtn = document.getElementById('restartBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            const caseNumberEl = document.getElementById('caseNumber');
+            const progressDivs = document.querySelectorAll('#progress div');
+            const promptTextEl = document.getElementById('promptText');
+            const caseTextEl = document.getElementById('caseText');
+            const reasoningSection = document.getElementById('reasoningSection');
+            const choicesEl = document.getElementById('choices');
+            
+            const feedbackModal = document.getElementById('feedbackModal');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackText = document.getElementById('feedbackText');
+            const finalScoreEl = document.getElementById('finalScore');
+            
+            // --- GAME DATA ---
+            const cases = [
+                {
+                    prompt: "Write a short description of a dedicated nurse.",
+                    response: "She is a compassionate and caring professional who always puts her patients first. Her gentle touch and nurturing demeanor make everyone feel at ease.",
+                    biasedWords: ["She", "her", "Her", "nurturing"],
+                    choices: [
+                        { text: "Reinforces a gender stereotype.", correct: true },
+                        { text: "Contains factually incorrect information.", correct: false },
+                        { text: "Unfairly associates a role with age.", correct: false },
+                    ],
+                    explanation: "Correct! Using 'she' and 'her' exclusively, along with words like 'nurturing,' reinforces the stereotype that nursing is a female profession. LLMs learn this from societal biases present in their training data."
+                },
+                {
+                    prompt: "Generate a list of traits for a strong CEO.",
+                    response: "He is a decisive, assertive leader who commands respect. His aggressive business strategies and competitive nature drive the company's success.",
+                    biasedWords: ["He", "His", "aggressive"],
+                    choices: [
+                        { text: "Assumes all leaders are competitive.", correct: false },
+                        { text: "Reinforces a gender stereotype.", correct: true },
+                        { text: "The description is too vague.", correct: false },
+                    ],
+                    explanation: "Excellent! The prompt didn't specify a gender, but the AI defaulted to 'he' and used traditionally masculine-coded traits like 'aggressive.' This reflects a common bias in business leadership descriptions."
+                },
+                {
+                    prompt: "Describe a typical software engineer at a tech company.",
+                    response: "The young developer, fueled by pizza and caffeine, spends long nights coding. He's brilliant but socially awkward, preferring the company of his computer.",
+                    biasedWords: ["young", "He's", "socially awkward"],
+                    choices: [
+                        { text: "Promotes an unhealthy work-life balance.", correct: false },
+                        { text: "Contains factually incorrect information.", correct: false },
+                        { text: "Uses age and personality stereotypes.", correct: true },
+                    ],
+                    explanation: "Spot on! This response reinforces multiple stereotypes: that engineers are young, male, and socially awkward. This ignores the vast diversity of people in the tech industry."
+                }
+            ];
+
+            // --- GAME STATE ---
+            let currentCaseIndex = 0;
+            let score = 0;
+            let highlightedWords = [];
+            
+            // --- FUNCTIONS ---
+            function showIntro() {
+                introStep.classList.remove('hidden');
+                reflectionStep.classList.add('hidden');
+                gameStep.classList.add('hidden');
+                finalStep.classList.add('hidden');
+            }
+            
+            function showReflection() {
+                introStep.classList.add('hidden');
+                reflectionStep.classList.remove('hidden');
+            }
+
+            function startGame() {
+                reflectionStep.classList.add('hidden');
+                finalStep.classList.add('hidden');
+                gameStep.classList.remove('hidden');
+                currentCaseIndex = 0;
+                score = 0;
+                loadCase(currentCaseIndex);
+                updateProgress();
+            }
+
+            function loadCase(index) {
+                const currentCase = cases[index];
+                highlightedWords = [];
+                
+                caseNumberEl.textContent = index + 1;
+                promptTextEl.textContent = currentCase.prompt;
+                caseTextEl.innerHTML = '';
+                reasoningSection.classList.add('hidden');
+                submitBtn.disabled = true;
+
+                // Create clickable spans for each word
+                currentCase.response.split(/(\s+)/).forEach((word, i) => {
+                    if (word.trim() !== '') {
+                        const span = document.createElement('span');
+                        span.textContent = word;
+                        span.dataset.word = word.replace(/[^a-zA-Z]/g, ""); // Store clean word
+                        span.addEventListener('click', () => toggleHighlight(span));
+                        caseTextEl.appendChild(span);
+                    } else {
+                        caseTextEl.appendChild(document.createTextNode(word));
+                    }
+                });
+
+                // Populate choices
+                choicesEl.innerHTML = '';
+                currentCase.choices.forEach((choice, i) => {
+                    const choiceDiv = document.createElement('div');
+                    choiceDiv.innerHTML = `
+                        <input type="radio" id="choice${i}" name="biasReason" value="${choice.correct}" class="hidden peer">
+                        <label for="choice${i}" class="block p-3 border border-slate-300 rounded-lg cursor-pointer peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:ring-2 peer-checked:ring-blue-500 transition-all">
+                            ${choice.text}
+                        </label>
+                    `;
+                    choicesEl.appendChild(choiceDiv);
+                });
+            }
+
+            function toggleHighlight(span) {
+                span.classList.toggle('highlighted');
+                const word = span.dataset.word;
+                if (highlightedWords.includes(word)) {
+                    highlightedWords = highlightedWords.filter(w => w !== word);
+                } else {
+                    highlightedWords.push(word);
+                }
+                
+                if (highlightedWords.length > 0) {
+                    reasoningSection.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                } else {
+                    reasoningSection.classList.add('hidden');
+                    submitBtn.disabled = true;
+                }
+            }
+
+            function checkAnswer() {
+                const currentCase = cases[currentCaseIndex];
+                const selectedReason = document.querySelector('input[name="biasReason"]:checked');
+
+                if (!selectedReason) {
+                    // Simple validation
+                    alert('Please select a reason.');
+                    return;
+                }
+
+                const isReasonCorrect = selectedReason.value === 'true';
+                
+                // Check if at least one correct biased word was highlighted
+                const isHighlightCorrect = highlightedWords.some(word => currentCase.biasedWords.includes(word));
+
+                if (isReasonCorrect && isHighlightCorrect) {
+                    feedbackTitle.textContent = "Correct!";
+                    feedbackText.textContent = currentCase.explanation;
+                    score++;
+                } else {
+                    feedbackTitle.textContent = "Not Quite...";
+                    if (!isHighlightCorrect) {
+                        feedbackText.textContent = "You might have missed the key biased phrases. Try looking for words that assume gender, age, or personality traits.";
+                    } else {
+                        feedbackText.textContent = "That's not the primary type of bias here. Think about what assumptions the AI is making about people or groups.";
+                    }
+                }
+                updateProgress(true);
+                feedbackModal.classList.remove('hidden');
+            }
+            
+            function updateProgress(isCorrect = null) {
+                if (isCorrect === null) { // Reset state
+                    progressDivs.forEach(div => div.className = 'w-8 h-2 bg-slate-200 rounded-full');
+                    return;
+                }
+
+                const currentDiv = progressDivs[currentCaseIndex];
+                if (isCorrect) {
+                    currentDiv.classList.remove('bg-slate-200');
+                    currentDiv.classList.add('bg-green-500');
+                } else {
+                     currentDiv.classList.remove('bg-slate-200');
+                     currentDiv.classList.add('bg-red-500');
+                }
+            }
+            
+            function nextCase() {
+                feedbackModal.classList.add('hidden');
+                currentCaseIndex++;
+                if (currentCaseIndex < cases.length) {
+                    loadCase(currentCaseIndex);
+                } else {
+                    showFinalScreen();
+                }
+            }
+            
+            function showFinalScreen() {
+                 gameStep.classList.add('hidden');
+                 finalStep.classList.remove('hidden');
+                 finalScoreEl.textContent = `You correctly identified the bias in ${score} out of ${cases.length} cases.`;
+            }
+
+            // --- EVENT LISTENERS ---
+            introContinueBtn.addEventListener('click', showReflection);
+            startBtn.addEventListener('click', startGame);
+            submitBtn.addEventListener('click', checkAnswer);
+            nextBtn.addEventListener('click', nextCase);
+            restartBtn.addEventListener('click', showIntro);
+
+            // Initial state
+            showIntro();
+        });
+    </script>
+</body>
+</html>
+
+
